@@ -1,12 +1,12 @@
-# -*- coding: utf-8 -*-  
-  
-""" 
+# -*- coding: utf-8 -*-
+
+"""
 Optimize the operation for Huawei and other mobile for myself based.
 
-Original author is 冰蓝 
-"""  
-  
-import shutil  
+Original author is 冰蓝
+"""
+
+import shutil
 import os
 import stat
 import getopt
@@ -19,7 +19,7 @@ DEFAULT_PHOTO_DIR = '../imgs'
 DEFAULT_TARGET_DIR = os.path.join('..', 'photos-by-date')
 
 
-# Only process images, videos 
+# Only process images, videos
 ALLOWED_EXTENSIONS = ('.jpg', '.jpeg', '.gif','.png','.mp4')
 
 # Filename date gussing settings
@@ -56,20 +56,20 @@ def guessDateByFileName(filename):
                     pass
 
 def getExifDate(filename):
-    try:  
-        fd = open(filename, 'rb')  
-    except:  
+    try:
+        fd = open(filename, 'rb')
+    except:
         print("Not able to open file[%s]\n" % filename)
         return
-    data = exifread.process_file( fd )  
-    if data:  
+    data = exifread.process_file( fd )
+    if data:
         try:
             return datetime.strptime(str(data['EXIF DateTimeOriginal'])[:10], '%Y:%m:%d')
-        except:  
+        except:
             pass
 
 def getFileModifiedDate(filename):
-    fstat = os.stat(filename)  
+    fstat = os.stat(filename)
     return datetime.datetime.fromtimestamp(fstat[stat.ST_MTIME])
 
 
@@ -80,17 +80,17 @@ def getFileDate(filename):
     if date != None:
         #print("Exif date is", date)
         return date
-    
+
     date = guessDateByFileName(filename)
     if date != None:
         #print("File name date is", date)
         return date
-    
+
     date = getFileModifiedDate(filename)
     if date != None:
         #print("File modifiled date is", date)
         return date
-    
+
     raise Exception('Error to get the file date information', filename)
 
 def copyPhotoToFolder(filename, fileFullPath, source, target):
@@ -116,7 +116,7 @@ def copyPhotoToFolder(filename, fileFullPath, source, target):
         os.mkdir(targetDir)
 
     targetFilePath = os.path.join(targetDir, filename)
-    
+
     # Copy the file to the target directory
     if not os.path.exists(targetFilePath):
         shutil.copy2( fileFullPath, targetFilePath )
@@ -132,24 +132,24 @@ def classifyPhoto(source, target):
     if not os.path.exists(source):
         print("The source path '%s' does not exist")
         return
-    
-    if not os.path.exists(target ):  
+
+    if not os.path.exists(target ):
         os.mkdir(target)
 
     newPhotos = 0
 
-    for root,dirs,files in os.walk(source, True):  
-        for filename in files:  
+    for root,dirs,files in os.walk(source, True):
+        for filename in files:
             fileFullPath = os.path.join(root, filename)
             newPhotos += copyPhotoToFolder(filename, fileFullPath, source, target)
 
     print("Copy %d new photos or videos to the '%s'." % (newPhotos, target))
 
-   
-if __name__ == "__main__":  
+
+if __name__ == "__main__":
     source = DEFAULT_PHOTO_DIR
     target = DEFAULT_TARGET_DIR
-    
+
     try:
         opts,args=getopt.getopt(sys.argv[1:],"s:t:h",["source=","target=","help"])
         for option, arg in opts:
