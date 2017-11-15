@@ -1,9 +1,17 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """
 Optimize the operation for Huawei and other mobile for myself based.
-
 Original author is 冰蓝
+
+TODO:
+ - Handle the different photos with the same file name in the copy.
+  - Rename some files to the new name
+  - Need database to trace the change
+ - inotify support to watch the source directory
+   avoid too much actions for most existing files
+ - Copy photo and video files to different folders
 """
 
 import shutil
