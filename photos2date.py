@@ -52,14 +52,18 @@ def guessDateByFileName(filename):
     """
     Guess the date by the filename
     Examples of the filename with the date
-    VID_20190901_090909.mp4  with spliter '-' and format '%Y%m%d'
+    VID_20190909_090909.mp4  with spliter '-' and format '%Y%m%d'
+    20160111_154215_yunle.mp4
+    20151214_084655_001.mp4
+    20150515_195309.mp4
     """
+    pureFileName = os.path.split(filename)[-1]
     for spliter in SPLITERS:
         for datefmt in DATE_FORMATS:
-            for segment in filename.split(spliter):
+            for segment in pureFileName.split(spliter):
                 try:
-                    return datetime.strptime(segment, datefmt)
-                    break
+                    date = datetime.strptime(segment, datefmt)
+                    return date
                 except ValueError, err:
                     pass
 
@@ -78,7 +82,7 @@ def getExifDate(filename):
 
 def getFileModifiedDate(filename):
     fstat = os.stat(filename)
-    return datetime.datetime.fromtimestamp(fstat[stat.ST_MTIME])
+    return datetime.fromtimestamp(fstat[stat.ST_MTIME])
 
 
 def getFileDate(filename):
@@ -90,8 +94,9 @@ def getFileDate(filename):
         return date
 
     date = guessDateByFileName(filename)
+    #print("File date is befoe filenaem", date)
     if date != None:
-        #print("File name date is", date)
+        #print("File name '%s' date is %s" % (filename,date))
         return date
 
     date = getFileModifiedDate(filename)
@@ -99,7 +104,8 @@ def getFileDate(filename):
         #print("File modifiled date is", date)
         return date
 
-    raise Exception('Error to get the file date information', filename)
+    print( "Error: no date information. Take 2000-01-01 for %s" % filename)
+    return datetime(2000, 1,1)
 
 def copyPhotoToFolder(filename, fileFullPath, source, target):
     """Copy the file to the target folder with year/month sub folder
@@ -110,11 +116,7 @@ def copyPhotoToFolder(filename, fileFullPath, source, target):
         print("Skip '%s': file type is not supported. " % filename)
         return 0
 
-    try:
-        date = getFileDate(fileFullPath)
-    except Exception as err:
-        print(err)
-        return 0
+    date = getFileDate(fileFullPath)
 
     targetDir = os.path.join(target, "%04d" % date.year)
     if not os.path.exists(targetDir):
@@ -133,7 +135,7 @@ def copyPhotoToFolder(filename, fileFullPath, source, target):
     else:
         # Skip the existing file with the same file name.
         # TODO: Make the file comparasion and consider the strategy to handle same name files
-        print "Skip '%s': already exists." % fileFullPath
+        # print "Skip '%s': already exists." % fileFullPath
         return 0
 
 def classifyPhoto(source, target):
