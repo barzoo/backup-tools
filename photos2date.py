@@ -29,6 +29,7 @@ DEFAULT_TARGET_DIR = os.path.join('..', 'photos-by-date')
 
 # Only process images, videos
 ALLOWED_EXTENSIONS = ('.jpg', '.jpeg', '.gif','.png','.mp4')
+IGNORE_FOLDERS = ('.thumbs', 'Quik/.thumbnails', 'Camera/cache/latest')
 
 # Filename date gussing settings
 SPLITERS = ['_', ' ', '-']
@@ -115,6 +116,11 @@ def copyPhotoToFolder(filename, fileFullPath, source, target):
     if extension.lower() not in ALLOWED_EXTENSIONS:
         print("Skip '%s': file type is not supported. " % filename)
         return 0
+
+    for folder in IGNORE_FOLDERS:
+        if fileFullPath.find(folder) > 0:
+            print("Skip: %s folder is set to ignore" % folder)
+            return 0
 
     date = getFileDate(fileFullPath)
 
