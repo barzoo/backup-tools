@@ -88,6 +88,8 @@ def guessDateByFileName(filename):
 
 
 def getExifDate(filename):
+    '''Read EXIF data information from the picture file
+    '''
     try:
         fd = open(filename, 'rb')
     except:
@@ -103,6 +105,8 @@ def getExifDate(filename):
 
 
 def getFileModifiedDate(filename):
+    '''Get the date by the file modification time.
+    '''
     fstat = os.stat(filename)
     return datetime.fromtimestamp(fstat[stat.ST_MTIME])
 
@@ -213,6 +217,12 @@ def copyPhotoToFolder(filename, fileFullPath, source, target):
 
 
 def classifyPhoto(source, target):
+    '''Scan the pictures from the source directory and copy to the target
+    directory with the date formated folders.
+
+    :param source: source directory contains pictures
+    :param target: target directory to save the pictures
+    '''
     if not os.path.exists(source):
         logging.error(f"The source path '{source}' does not exist")
         return
