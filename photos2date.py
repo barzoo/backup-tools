@@ -26,7 +26,15 @@ import re
 import logging
 
 # Configure the logging into a file to tracing.
-logging.basicConfig(filename='picture-by-date.log', level=logging.INFO)
+logging.basicConfig(level=logging.INFO,
+                    format='[%(asctime)s %(levelname)s] %(message)s',
+                    datefmt='%d %b %Y %H:%M:%S',
+                    filename='picture-by-date.log'
+                    )
+
+console = logging.StreamHandler()
+console.setLevel(logging.INFO)
+logging.getLogger('').addHandler(console)
 
 # Default image folder
 DEFAULT_PHOTO_DIR = 'imgs'
@@ -135,11 +143,9 @@ def copyDuplicatedFile(targetFilePath, fileFullPath):
 
     while increase < MAX_TRIES:
         name, extension = os.path.splitext(targetPath)
-        # print(targetPath, name, extension)
         results = re.search(REG_POSTFIX, name)
 
         if results:
-            print(targetPath, name, results.groups())
             next_name = int(results.group(1)) + increase
             next_name = re.sub(REG_POSTFIX, EX_POSTFIX + str(next_name), name)
         else:
@@ -153,12 +159,12 @@ def copyDuplicatedFile(targetFilePath, fileFullPath):
             if not filecmp.cmp(targetPath, fileFullPath):
                 increase += 1
             else:
-                logging.debug(f"Duplicated {targetPath}, give up.")
+                logging.debug(f"Duplicated \"{targetPath}\", give up.")
                 break
         else:
             shutil.copy2(fileFullPath, targetPath)
             return 1
-    logging.info(f"Duplicated {targetPath}, tried {increase} times")
+    logging.info(f"Give up duplicated \"{targetPath}\" after {increase} times")
     return 0
 
 
@@ -225,6 +231,7 @@ def classifyPhoto(source, target):
                                            target)
 
     logging.info(f"Copy {newPhotos} new photos or videos to the '{target}'.")
+
 
 if __name__ == "__main__":
     source = DEFAULT_PHOTO_DIR
