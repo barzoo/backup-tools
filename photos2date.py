@@ -25,21 +25,11 @@ import filecmp
 import re
 import logging
 
-# Configure the logging into a file to tracing.
-logging.basicConfig(level=logging.INFO,
-                    format='[%(asctime)s %(levelname)s] %(message)s',
-                    datefmt='%d %b %Y %H:%M:%S',
-                    filename='picture-by-date.log'
-                    )
-
-console = logging.StreamHandler()
-console.setLevel(logging.INFO)
-logging.getLogger('').addHandler(console)
-
+###############################################################################
 # Default image folder
 DEFAULT_PHOTO_DIR = 'imgs'
 DEFAULT_TARGET_DIR = 'photos-by-date'
-
+DEFAULT_LOG_FILE = 'picture-by-date.log'
 
 # Only process images, videos
 ALLOWED_EXTENSIONS = ('.jpg', '.jpeg', '.gif', '.png', '.mp4')
@@ -49,8 +39,7 @@ IGNORE_FOLDERS = ('.thumbs', 'Quik/.thumbnails', 'Camera/cache/latest')
 SPLITERS = ['_', ' ', '-']
 DATE_FORMATS = ['%Y%m%d', '%Y_%m_%d', '%Y-%m-%d']
 
-
-HELP_TEXT = """Backup mobile photos according to the date to target directory
+HELP_TEXT = f"""Backup mobile photos according to the date to target directory
 
 This tools is to back up the mobile photo and video files to the target
 directory and keep the original files without change. The sub folders will be
@@ -58,13 +47,15 @@ created in the target directory, which will be named by the year and months of
 file.
 
 Usage:
-    %s <arguments>
+    {os.path.split(__file__)[-1]} <arguments>
 
 Arguments:
-    -s --source=source directory of photos, default '%s'.
-    -t --target=target directory to back up files, default '%s'.
-    -h --help       This help page
-""" % (os.path.split(__file__)[-1], DEFAULT_PHOTO_DIR, DEFAULT_TARGET_DIR)
+    -s --source=source directory of photos, default '{DEFAULT_PHOTO_DIR}'.
+    -t --target=target directory to back up, default '{DEFAULT_TARGET_DIR}'.
+    -l --log-file=log file, default '{DEFAULT_LOG_FILE}'.
+    -h --help       This help page.
+"""
+###############################################################################
 
 
 def guessDateByFileName(filename):
@@ -163,12 +154,12 @@ def copyDuplicatedFile(targetFilePath, fileFullPath):
             if not filecmp.cmp(targetPath, fileFullPath):
                 increase += 1
             else:
-                logging.debug(f"Duplicated \"{targetPath}\", give up.")
+                logging.info(f"Existed \"{targetPath}\", give up.")
                 break
         else:
             shutil.copy2(fileFullPath, targetPath)
             return 1
-    logging.info(f"Give up duplicated \"{targetPath}\" after {increase} times")
+    logging.info(f"Failed to handle \"{targetPath}\" after {increase} times")
     return 0
 
 
@@ -246,20 +237,39 @@ def classifyPhoto(source, target):
 if __name__ == "__main__":
     source = DEFAULT_PHOTO_DIR
     target = DEFAULT_TARGET_DIR
+    logFile = DEFAULT_LOG_FILE
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "s:t:h", [
-                                   "source=", "target=", "help"])
+        opts, args = getopt.getopt(sys.argv[1:], "s:t:l:h", [
+                                   "source=", "target=", "log-file" "help"])
         for option, arg in opts:
             if option in ['--source', '-s']:
                 source = arg
             if option in ['--target', '-t']:
                 target = arg
+            if option in ['--log-file', '-l']:
+                logFile = arg
+
             if option in ['--help', '-h']:
                 print(HELP_TEXT)
                 sys.exit()
     except getopt.GetoptError as err:
-        logging.error(err)
+        print(err)
         sys.exit()
+
+    # Create the target folder before logging
+    if not os.path.exists(target):
+        os.mkdir(target)
+
+    # Configure the logging file
+    logging.basicConfig(level=logging.INFO,
+                        format='[%(asctime)s %(levelname)s] %(message)s',
+                        datefmt='%d %b %Y %H:%M:%S',
+                        filename=os.path.join(target, logFile)
+                        )
+
+    console = logging.StreamHandler()
+    console.setLevel(logging.INFO)
+    logging.getLogger('').addHandler(console)
 
     classifyPhoto(source, target)
