@@ -39,7 +39,7 @@ IGNORE_FOLDERS = ('.thumbs', 'Quik/.thumbnails', 'Camera/cache/latest')
 SPLITERS = ['_', ' ', '-']
 DATE_FORMATS = ['%Y%m%d', '%Y_%m_%d', '%Y-%m-%d']
 
-HELP_TEXT = f"""Backup mobile photos according to the date to target directory
+HELP_TEXT = """Backup mobile photos according to the date to target directory
 
 This tools is to back up the mobile photo and video files to the target
 directory and keep the original files without change. The sub folders will be
@@ -47,14 +47,17 @@ created in the target directory, which will be named by the year and months of
 file.
 
 Usage:
-    {os.path.split(__file__)[-1]} <arguments>
+    {thisScript} <arguments>
 
 Arguments:
     -s --source=source directory of photos, default '{DEFAULT_PHOTO_DIR}'.
     -t --target=target directory to back up, default '{DEFAULT_TARGET_DIR}'.
     -l --log-file=log file, default '{DEFAULT_LOG_FILE}'.
     -h --help       This help page.
-"""
+""".format(thisScript=os.path.split(__file__)[-1],
+           DEFAULT_PHOTO_DIR=DEFAULT_PHOTO_DIR,
+           DEFAULT_TARGET_DIR=DEFAULT_TARGET_DIR,
+           DEFAULT_LOG_FILE=DEFAULT_LOG_FILE)
 ###############################################################################
 
 
@@ -107,7 +110,7 @@ def getFileDate(filename):
     """
     date = getExifDate(filename)
     if date != None:
-        logging.debug(f"Exif date is {date}")
+        logging.debug("Exif date is {date}".format(date=date))
         return date
 
     date = guessDateByFileName(filename)
@@ -146,7 +149,8 @@ def copyDuplicatedFile(targetFilePath, fileFullPath):
         else:
             next_name = name + EX_POSTFIX + '1'
 
-        logging.debug(f"New name: {next_name} - [{increase}]")
+        logging.debug("New name: {next_name} - [{increase}]".format(
+            next_name=next_name, increase=increase))
 
         targetPath = next_name + extension
 
@@ -154,12 +158,14 @@ def copyDuplicatedFile(targetFilePath, fileFullPath):
             if not filecmp.cmp(targetPath, fileFullPath):
                 increase += 1
             else:
-                logging.info(f"Existed \"{targetPath}\", give up.")
+                logging.info("Existed \"{targetPath}\", give up.".format(
+                    targetPath=targetPath))
                 break
         else:
             shutil.copy2(fileFullPath, targetPath)
             return 1
-    logging.info(f"Failed to handle \"{targetPath}\" after {increase} times")
+    logging.info("Failed on \"{targetPath}\" after {increase} times".format(
+        targetPath=targetPath, increase=increase))
     return 0
 
 
@@ -188,7 +194,9 @@ def copyPhotoToFolder(filename, fileFullPath, source, target):
 
     targetFilePath = os.path.join(targetDir, filename)
     picDateStr = picDate.strftime("%Y-%m-%d")
-    logReplace = f"Add to [{picDateStr}]: \"{fileFullPath}\"."
+    logReplace = "Add to [{picDateStr}]: \"{fileFullPath}\".".format(
+        picDateStr=picDateStr, fileFullPath=fileFullPath
+    )
     # Copy the file to the target directory
     if not os.path.exists(targetFilePath):
         shutil.copy2(fileFullPath, targetFilePath)
@@ -196,14 +204,17 @@ def copyPhotoToFolder(filename, fileFullPath, source, target):
         return 1
     elif not filecmp.cmp(targetFilePath, fileFullPath):
         # Make the file comparasion and handle same name files
-        logging.info(f"Duplicated \"{targetFilePath}\" with different content")
+        logging.info("Duplicated name \"{targetFilePath}\". ".format(
+            targetFilePath=targetFilePath))
         count = copyDuplicatedFile(targetFilePath, fileFullPath)
         if count > 0:
             logging.info(logReplace)
             return count
     # Skip the existing file with the same file name.
-    logging.debug(f"Skip [{picDateStr}]: \"{fileFullPath}\" already existed as"
-                  f" \"{targetFilePath}\".")
+    logging.debug("Skip [{picDateStr}]: \"{fileFullPath}\" ".format(
+        picDateStr=picDateStr,
+        fileFullPath=fileFullPath) + " already existed as"
+        " \"{targetFilePath}\".".format(targetFilePath=targetFilePath))
     return 0
 
 
@@ -215,7 +226,8 @@ def classifyPhoto(source, target):
     :param target: target directory to save the pictures
     '''
     if not os.path.exists(source):
-        logging.error(f"The source path '{source}' does not exist")
+        logging.error("The source path '{source}' does not exist".format(
+            source=source))
         return
 
     if not os.path.exists(target):
@@ -231,7 +243,8 @@ def classifyPhoto(source, target):
                                            source,
                                            target)
 
-    logging.info(f"Copy {newPhotos} new photos or videos to the '{target}'.")
+    logging.info("Copy {newPhotos} new picture to the '{target}'.".format(
+        newPhotos=newPhotos, target=target))
 
 
 if __name__ == "__main__":
